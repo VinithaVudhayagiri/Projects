@@ -1,25 +1,31 @@
-create storage integration azure_snowflake_integration
-    type = external_stage
-    storage_provider = azure
-    azure_tenant_id = '5fd8c3fb-e858-4d84-956d-3c0bf74e7e98'
-    enabled = true
-    storage_allowed_locations = ( 'azure://<>.blob.core.windows.net/snowfalkeintegration/');
+-- Create a storage integration to connect Snowflake with Azure Blob Storage
+CREATE STORAGE INTEGRATION azure_snowflake_integration
+    TYPE = EXTERNAL_STAGE
+    STORAGE_PROVIDER = AZURE
+    AZURE_TENANT_ID = '<azure_tenant_id>'  -- Replace with your Azure tenant ID
+    ENABLED = TRUE
+    STORAGE_ALLOWED_LOCATIONS = ( 'azure://<account>.blob.core.windows.net/<folder>/' );
 
+-- Verify the storage integration configuration
 DESC STORAGE INTEGRATION azure_snowflake_integration;
 
-
+-- Use the appropriate schema
 USE SCHEMA AZUREINTEGRATION;
 
+-- Create a stage in Snowflake to reference the Azure Blob Storage location
 CREATE STAGE azure_stage
   STORAGE_INTEGRATION = azure_snowflake_integration
-  URL = 'azure://<>.blob.core.windows.net/snowfalkeintegration/'
-  FILE_FORMAT = (type=json);
+  URL = 'azure://<account>.blob.core.windows.net/<folder>/'
+  FILE_FORMAT = (TYPE = JSON);
 
+-- Create or replace a table to store the data
 CREATE OR REPLACE TABLE TEST_TABLE(
-EVENT VARIANT
+  EVENT VARIANT  -- Store JSON data in the VARIANT column
 );
-  
+
+-- Copy data from Azure Blob Storage into the Snowflake table
 COPY INTO TEST_TABLE
   FROM @azure_stage;
 
-select * from test_table;
+-- Query the table to view the copied data
+SELECT * FROM TEST_TABLE;
